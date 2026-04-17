@@ -1,4 +1,6 @@
 import os
+import time
+import argparse
 from dotenv import load_dotenv
 from google import genai
 
@@ -7,15 +9,39 @@ def main():
     #loading api key
     load_dotenv()
     api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
+    if api_key is None:
         raise RuntimeError("api key not found")
     
     #creating gen ai client
     client = genai.Client(api_key=api_key)
 
-    content = client.models.generate_content(model="gemini-2.5-flash", contents="Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum.")
-    
-    print(content.text)
+    # get user input
+    parser = argparse.ArgumentParser(description="Chatbot")
+    parser.add_argument("user_prompt", type=str, help="User prompt")
+    args = parser.parse_args() #args.user_prompt
+
+    #api call
+    response = None
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(model="gemini-2.5-flash", contents=args.user_prompt)
+            break
+        except Exception as e:
+            if attempt == 2:
+                raise RuntimeError("failed api initial call after 3 tries") from e
+            time.sleep(2)
+        
+
+    #usage metadata
+    if response is None or response.usage_metadata is None:
+        raise RuntimeError("failed api call, cannot access metadata")
+    prompt_tokens = response.usage_metadata.prompt_token_count
+    response_tokens = response.usage_metadata.candidates_token_count
+
+    print(f"Prompt tokens: {prompt_tokens}")
+    print(f"Response tokens: {response_tokens}")
+    print("Response:")
+    print(response.text)
 
 
 if __name__ == "__main__":
