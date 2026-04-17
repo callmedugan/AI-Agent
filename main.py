@@ -3,6 +3,7 @@ import time
 import argparse
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 def main():
 
@@ -18,17 +19,21 @@ def main():
     # get user input
     parser = argparse.ArgumentParser(description="Chatbot")
     parser.add_argument("user_prompt", type=str, help="User prompt")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output") #toggle on for detailed info in the output
     args = parser.parse_args() #args.user_prompt
+
+    # store messages
+    messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
 
     #api call
     response = None
-    for attempt in range(3):
+    for attempt in range(10):
         try:
-            response = client.models.generate_content(model="gemini-2.5-flash", contents=args.user_prompt)
+            response = client.models.generate_content(model="gemini-2.5-flash", contents=messages)
             break
         except Exception as e:
             if attempt == 2:
-                raise RuntimeError("failed api initial call after 3 tries") from e
+                raise RuntimeError("failed api initial call after 10 tries") from e
             time.sleep(2)
         
 
@@ -38,8 +43,10 @@ def main():
     prompt_tokens = response.usage_metadata.prompt_token_count
     response_tokens = response.usage_metadata.candidates_token_count
 
-    print(f"Prompt tokens: {prompt_tokens}")
-    print(f"Response tokens: {response_tokens}")
+    if args.verbose:
+        print(f"User prompt: {args.user_prompt}")
+        print(f"Prompt tokens: {prompt_tokens}")
+        print(f"Response tokens: {response_tokens}")
     print("Response:")
     print(response.text)
 
