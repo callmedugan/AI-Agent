@@ -13,17 +13,17 @@ def get_files_info(working_directory, directory="."):
     if not os.path.isdir(target_dir):
         return f'Error: "{directory}" is not a directory'
     
+    # create list so that we can join the file data together to feed the LLM
     items = []
 
     try:
         for item in os.listdir(target_dir):
-            file = target_dir + "/" + item
-            size = os.path.getsize(file)
-            is_dir = os.path.isdir(file)
-            string = (f"- {item}: file_size={size} bytes, is_dir={is_dir}")
-            items.append(string)
+            full_file_path = target_dir + "/" + item
+            size = os.path.getsize(full_file_path)
+            is_dir = os.path.isdir(full_file_path)
+            items.append(f"- {item}: file_size={size} bytes, is_dir={is_dir}")
     except Exception:
-        return f"Error: error when reading {file}" #for the LLM
+        return f"Error: error when reading {full_file_path}" # return as string for the LLM
     
     result = "\n".join(items)
     print(result)
