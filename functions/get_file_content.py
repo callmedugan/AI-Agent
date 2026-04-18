@@ -1,5 +1,6 @@
 import os
 from config import MAX_FILE_READ_BYTES
+from google.genai import types
 
 def get_file_content(working_directory, file_path):
         
@@ -24,3 +25,18 @@ def get_file_content(working_directory, file_path):
         return f'Error: Failed to read contents of: "{file_path}"'
     
     return file_contents
+
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description=f"Reads a file in a specified directory relative to the working directory, returning up to {MAX_FILE_READ_BYTES} characters as string",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        required=["file_path"],
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="Directory path and file name, relative to the working directory",
+            ),
+        },
+    ),
+)
