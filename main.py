@@ -4,6 +4,8 @@ import argparse
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from prompts import system_prompt
+from call_function import available_functions
 
 def main():
 
@@ -29,7 +31,14 @@ def main():
     response = None
     for attempt in range(10):
         try:
-            response = client.models.generate_content(model="gemini-2.5-flash", contents=messages)
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=messages,
+                config=types.GenerateContentConfig(
+                    tools=[available_functions], #from call_function.py
+                    system_instruction=system_prompt
+                    )
+                )
             break
         except Exception as e:
             if attempt == 2:
@@ -48,7 +57,11 @@ def main():
         print(f"Prompt tokens: {prompt_tokens}")
         print(f"Response tokens: {response_tokens}")
     print("Response:")
-    print(response.text)
+    if response.function_calls:
+        for call in response.function_calls:
+            print(f"Calling function: {call.name}({call.args})")
+    else:
+        print(response.text)
 
 
 if __name__ == "__main__":
