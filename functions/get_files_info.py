@@ -27,7 +27,7 @@ def get_files_info(working_directory, directory="."):
         return f"Error: error when reading {full_file_path}" # return as string for the LLM
     
     result = "\n".join(items)
-    print(result)
+    #print(result)
     return result
 
 schema_get_files_info = types.FunctionDeclaration(
